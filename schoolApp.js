@@ -1,5 +1,5 @@
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 
 const app = express();
 const db = mysql.createConnection({
@@ -26,7 +26,11 @@ app.get('/create_DB/:data_base', (req, res) => {
     )
 })
 app.get('/create_table/courses', (req, res) => {
-    let sql = `CREATE TABLE courses(id int AUTO_INCREMENT, course_name VARCHAR(255), details VARCHAR(255), PRIMARY KEY(id))`
+    let sql = `CREATE TABLE courses(id int AUTO_INCREMENT,
+                                    course_name VARCHAR(255),
+                                     details VARCHAR(255),
+                                      PRIMARY KEY(id)
+                                      FOREIGN KEY(teacherID) REFERENCES teacher(id))`
     db.query(sql, (err, result) => {
         if (err) {
             console.log(err)
@@ -77,19 +81,19 @@ app.get('/add/columns/:table/:cloumns', (req, res) => {
     }) 
 })
 
-app.get('/add/:name/:first_name/:last_name', (req, res) => {
+app.get('/add/:table/:first_name/:last_name', (req, res) => {
     let person = {
         first_name: req.params.first_name,
         last_name: req.params.last_name
     }
-    let sql =` INSERT INTO ${req.params.name} SET ?`
+    let sql =` INSERT INTO ${req.params.table} SET ?`
     db.query(sql, person, (err, result) => {
         if (err) {
             console.log(err)
             res.send(err.sqlMessage);
         }
         console.log("Result: ", result);
-        res.send("person: " + JSON.stringify(person));
+        res.send("person: " + result.insertId + JSON.stringify(person));
     })
 })
 
@@ -112,10 +116,10 @@ app.get('/getData/:table', (req, res) => {
       res.send("Result: " + JSON.stringify(result) );
     }) 
 })
-app.get('/update/:table/:columns/:row/:course_id', (req, res) => {
+app.get('/update/:table/:columns/:row/:teacher_id', (req, res) => {
     let sql = `UPDATE ${req.params.table} 
-                SET ${req.params.columns} = ${req.params.course_id} 
-                WHERE ${req.params.course_id} = id`
+                SET ${req.params.columns} = ${req.params.teacher_id} 
+                WHERE ${req.params.row} = id`
     db.query(sql, (err, result, fields) =>{
       if (err) throw err;
       console.log("Result: ", result);
@@ -123,6 +127,23 @@ app.get('/update/:table/:columns/:row/:course_id', (req, res) => {
       res.send("Result: " + JSON.stringify(result) );
     }) 
 })
+app.get('/drop/:table', (req, res) => {
+    let sql = `DROP TABLE IF EXISTS ${req.params.table}`
+    db.query(sql, (err, result, fields) =>{
+      if (err) throw err;
+      console.log("Result: ", result);
+      res.send("Result: " + JSON.stringify(result) );
+    }) 
+})
+app.get('/drop/:table/:column', (req, res) => {
+    let sql = `ALTER TABLE ${req.params.table} DROP COLUMN ${req.params.column}`
+    db.query(sql, (err, result, fields) =>{
+      if (err) throw err;
+      console.log("Result: ", result);
+      res.send("Result: " + JSON.stringify(result) );
+    }) 
+})
+
 
 
 
